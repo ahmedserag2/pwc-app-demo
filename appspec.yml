@@ -1,0 +1,22 @@
+version: 0.2
+
+phases:
+  install:
+    runtime-versions:
+      nodejs: 12
+  pre_build:
+    commands:
+      - echo Installing AWS CLI...
+      - npm install -g aws-cli
+  build:
+    commands:
+      - echo Verifying last task definition...
+      - TASK_DEFINITION_ARN=$(aws ecs describe-task-definition --task-definition ${MY_APP_PREFIX}-service --output text --query 'taskDefinition.taskDefinitionArn')
+      - echo "export TASK_DEFINITION_ARN='${TASK_DEFINITION_ARN}'" >> $BASH_ENV
+  post_build:
+    commands:
+      - echo Deploying the service update to Amazon ECS...
+      - aws ecs update-service --service ${MY_APP_PREFIX}-service --cluster ${MY_APP_PREFIX}-cluster --task-definition ${TASK_DEFINITION_ARN}
+artifacts:
+  files:
+    - '**/*'
